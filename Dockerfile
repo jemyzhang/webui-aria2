@@ -1,12 +1,26 @@
-FROM debian:8
+FROM ubuntu
 
 # less priviledge user, the id should map the user the downloaded files belongs to
 RUN groupadd -r dummy && useradd -r -g dummy dummy -u 1000
 
 # webui + aria2
 RUN apt-get update \
-	&& apt-get install -y aria2 busybox curl \
-	&& rm -rf /var/lib/apt/lists/*
+    && apt-get install -y busybox curl \
+    git \
+    make g++ libssl-dev nettle-dev libgmp-dev libssh2-1-dev libc-ares-dev libxml2-dev zlib1g-dev libsqlite3-dev pkg-config libxml2-dev libcppunit-dev autoconf automake autotools-dev autopoint libtool \
+    && ARIA2_VERSION="1.30.0" \
+    && mkdir aria_build && cd aria_build \
+    && curl -L https://github.com/aria2/aria2/releases/download/release-"$ARIA2_VERSION"/aria2-"$ARIA2_VERSION".tar.gz > aria2.tar.gz \
+    && tar -xzf aria2.tar.gz \
+    && cd aria2-$ARIA2_VERSION \
+    && autoreconf -i  && ./configure && make \
+    && mv src/aria2c /usr/bin/ \
+    && cd ../.. \
+    && rm -rf aria_build \
+    && apt-get remove -y --purge --auto-remove make g++ libssl-dev nettle-dev libgmp-dev libssh2-1-dev libc-ares-dev libxml2-dev zlib1g-dev libsqlite3-dev pkg-config libxml2-dev libcppunit-dev autoconf automake autotools-dev autopoint libtool \
+    && apt-get install -y libxml2 libsqlite3-0 libc-ares2 zlib1g libssh2-1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ADD . /webui-aria2
 
